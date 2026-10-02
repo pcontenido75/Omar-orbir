@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/transparent">
+
+    <LinearLayout
+        android:id="@+id/sideBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:orientation="vertical"
+        android:background="#66000000"
+        android:padding="6dp">
+
+        <ImageButton android:id="@+id/side_1" android:layout_width="48dp" android:layout_height="48dp" android:layout_margin="4dp" />
+        <ImageButton android:id="@+id/side_2" android:layout_width="48dp" android:layout_height="48dp" android:layout_margin="4dp" />
+        <ImageButton android:id="@+id/side_3" android:layout_width="48dp" android:layout_height="48dp" android:layout_margin="4dp" />
+        <ImageButton android:id="@+id/side_4" android:layout_width="48dp" android:layout_height="48dp" android:layout_margin="4dp" />
+        <ImageButton android:id="@+id/side_5" android:layout_width="48dp" android:layout_height="48dp" android:layout_margin="4dp" />
+        <ImageButton android:id="@+id/side_6" android:layout_width="48dp" android:layout_height="48dp" android:layout_margin="4dp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/bottomBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:orientation="horizontal"
+        android:background="#66000000"
+        android:padding="6dp"
+        android:layout_marginBottom="16dp">
+
+        <ImageButton android:id="@+id/bottom_1" android:layout_width="48dp" android:layout_height="48dp" android:layout_margin="4dp" />
+        <ImageButton android:id="@+id/bottom_2" android:layout_width="48dp" android:layout_height="48dp" android:layout_margin="4dp" />
+        <ImageButton android:id="@+id/bottom_3" android:layout_width="48dp" android:layout_height="48dp" android:layout_margin="4dp" />
+        <ImageButton android:id="@+id/bottom_4" android:layout_width="48dp" android:layout_height="48dp" android:layout_margin="4dp" />
+    </LinearLayout>
+
+</RelativeLayout>
