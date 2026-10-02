@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Omar Orbit</title>
+  
+  <!-- Configuración Web App para pantalla completa en Android -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#121212">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background-color: #0d0f12;
+      color: #fff;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Área central de apps / multitarea activa */
+    #workspace {
+      flex: 1;
+      position: relative;
+      background: radial-gradient(circle at center, #1b2028 0%, #0d0f12 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .app-viewport {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: none;
+      background: #fff;
+    }
+
+    .app-viewport.active {
+      display: block;
+    }
+
+    #empty-state {
+      text-align: center;
+      color: #6c798c;
+      padding: 20px;
+    }
+
+    #empty-state h2 {
+      font-size: 1.5rem;
+      color: #00e5ff;
+      margin-bottom: 8px;
+    }
+
+    /* Burbujas flotantes base */
+    .bubble {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(8px);
+      transition: transform 0.15s ease, border-color 0.2s ease;
+      touch-action: manipulation;
+    }
+
+    .bubble:active {
+      transform: scale(0.9);
+    }
+
+    .bubble.active-bubble {
+      border-color: #00e5ff;
+      box-shadow: 0 0 16px rgba(0, 229, 255, 0.6);
+    }
+
+    /* Dock Lateral: 6 burbujas */
+    #sidebar {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 100;
+    }
+
+    /* Dock Inferior: 4 burbujas + botón añadir */
+    #bottombar {
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 100;
+      background: rgba(20, 24, 30, 0.7);
+      padding: 8px 14px;
+      border-radius: 36px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .add-btn {
+      background: #232a35;
+      color: #00e5ff;
+      font-size: 20px;
+    }
+
+    /* Modal para agregar apps */
+    #modal {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #modal-card {
+      background: #181d24;
+      padding: 20px;
+      border-radius: 16px;
+      width: 85%;
+      max-width: 320px;
+      border: 1px solid #2b3340;
+    }
+
+    #modal-card input {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      background: #0d0f12;
+      border: 1px solid #3b4657;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 14px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .modal-actions button {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .btn-save { background: #00e5ff; color: #000; }
+    .btn-cancel { background: #2a3340; color: #fff; }
+  </style>
+</head>
+<body>
+
+  <!-- Espacio de trabajo (visor de aplicaciones) -->
+  <div id="workspace">
+    <div id="empty-state">
+      <h2>Omar Orbit</h2>
+      <p>Selecciona una burbuja flotante para iniciarla</p>
+    </div>
+  </div>
+
+  <!-- Dock Lateral (6 burbujas iniciales) -->
+  <div id="sidebar"></div>
+
+  <!-- Dock Inferior (4 burbujas iniciales + botón agregar) -->
+  <div id="bottombar">
+    <div id="bottom-bubbles" style="display: flex; gap: 12px;"></div>
+    <div class="bubble add-btn" onclick="openModal()">+</div>
+  </div>
+
+  <!-- Modal para agregar burbujas -->
+  <div id="modal">
+    <div id="modal-card">
+      <h3 style="margin-bottom: 8px;">Añadir Burbuja</h3>
+      <input type="text" id="app-name" placeholder="Nombre (máx 4 letras)" maxlength="4">
+      <input type="url" id="app-url" placeholder="https://ejemplo.com">
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+        <button class="btn-save" onclick="saveNewBubble()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Configuración inicial de burbujas (6 laterales, 4 inferiores)
+    const sideApps = [
+      { id: 's1', name: 'WIKI', color: '#3366cc', url: 'https://es.m.wikipedia.org' },
+      { id: 's2', name: 'CALC', color: '#ff9800', url: 'https://www.desmos.com/scientific' },
+      { id: 's3', name: 'BING', color: '#008373', url: 'https://www.bing.com' },
+      { id: 's4', name: 'REDD', color: '#ff4500', url: 'https://embed.reddit.com' },
+      { id: 's5', name: 'NOTE', color: '#4caf50', url: 'https://quicknote.io' },
+      { id: 's6', name: 'NEWS', color: '#673ab7', url: 'https://news.google.com' }
+    ];
+
+    const bottomApps = [
+      { id: 'b1', name: 'MAPS', color: '#34a853', url: 'https://www.google.com/maps' },
+      { id: 'b2', name: 'TRAN', color: '#4285f4', url: 'https://translate.google.com' },
+      { id: 'b3', name: 'TIME', color: '#ea4335', url: 'https://time.is' },
+      { id: 'b4', name: 'CHESS', color: '#795548', url: 'https://lichess.org/training' }
+    ];
+
+    const iframes = {};
+    let activeId = null;
+
+    function init() {
+      const sideContainer = document.getElementById('sidebar');
+      sideApps.forEach(app => renderBubble(app, sideContainer));
+
+      const bottomContainer = document.getElementById('bottom-bubbles');
+      bottomApps.forEach(app => renderBubble(app, bottomContainer));
+    }
+
+    function renderBubble(app, container) {
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.id = 'btn-' + app.id;
+      bubble.style.backgroundColor = app.color;
+      bubble.innerText = app.name;
+      bubble.onclick = () => switchApp(app);
+      container.appendChild(bubble);
+    }
+
+    function switchApp(app) {
+      const workspace = document.getElementById('workspace');
+      const emptyState = document.getElementById('empty-state');
+
+      // Minimizar si se pulsa la app que ya está activa
+      if (activeId === app.id) {
+        iframes[app.id].classList.remove('active');
+        document.getElementById('btn-' + app.id).classList.remove('active-bubble');
+        emptyState.style.display = 'block';
+        activeId = null;
+        return;
+      }
+
+      // Ocultar app anterior
+      if (activeId && iframes[activeId]) {
+        iframes[activeId].classList.remove('active');
+        const prevBtn = document.getElementById('btn-' + activeId);
+        if (prevBtn) prevBtn.classList.remove('active-bubble');
+      }
+
+      // Crear iframe en memoria o mostrar el existente (no se destruye -> persiste en segundo plano)
+      if (!iframes[app.id]) {
+        const frame = document.createElement('iframe');
+        frame.className = 'app-viewport';
+        frame.id = 'frame-' + app.id;
+        frame.src = app.url;
+        workspace.appendChild(frame);
+        iframes[app.id] = frame;
+      }
+
+      emptyState.style.display = 'none';
+      iframes[app.id].classList.add('active');
+      document.getElementById('btn-' + app.id).classList.add('active-bubble');
+      activeId = app.id;
+    }
+
+    function openModal() {
+      document.getElementById('modal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('modal').style.display = 'none';
+      document.getElementById('app-name').value = '';
+      document.getElementById('app-url').value = '';
+    }
+
+    function saveNewBubble() {
+      const name = document.getElementById('app-name').value.trim().toUpperCase();
+      let url = document.getElementById('app-url').value.trim();
+
+      if (!name || !url) return;
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://' + url;
+      }
+
+      const id = 'custom-' + Date.now();
+      const colors = ['#e91e63', '#009688', '#3f51b5', '#ff5722', '#607d8b'];
+      const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+      const newApp = { id, name, color: randomColor, url };
+      renderBubble(newApp, document.getElementById('bottom-bubbles'));
+      closeModal();
+      switchApp(newApp);
+    }
+
+    window.onload = init;
+  </script>
+</body>
+</html>
